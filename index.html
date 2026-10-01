@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kaza">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#eef1f5">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<title>Kaza</title>
+<style>
+  :root{--ink:#1d2433;--muted:#5d6678;--bg:#eef1f5;--line:#d5dbe4;--night:#33406e}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif}
+  .wrap{max-width:440px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 16px calc(90px + env(safe-area-inset-bottom))}
+  h1{font-size:1.55rem;font-weight:600;margin:0 0 14px}
+  h2{font-size:1.1rem;margin:28px 0 10px}
+  .sans{font-family:system-ui,sans-serif}
+  .banner{font-family:system-ui,sans-serif;background:#fff4e0;border:1px solid #e8c78d;border-radius:12px;padding:12px;margin-bottom:14px;font-size:.9rem}
+  .banner button{margin-top:8px}
+  .stats{display:grid;grid-template-columns:1fr 1.3fr 1fr;gap:8px;margin-bottom:10px}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 11px}
+  .stat b{display:block;font-size:1.75rem;font-variant-numeric:tabular-nums;line-height:1.05}
+  .stat span{font-family:system-ui,sans-serif;color:var(--muted);font-size:.78rem}
+  .prog{font-family:system-ui,sans-serif;font-size:.85rem;color:var(--muted);margin:0 0 16px;line-height:1.45}
+  .prog strong{color:var(--ink)}
+  .row{border-radius:14px;padding:14px 14px 12px;margin-bottom:10px;color:#fff}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .name{font-size:1.2rem;font-weight:600}
+  .done{font-family:system-ui,sans-serif;font-size:.8rem;opacity:.85}
+  .count{font-size:2rem;font-variant-numeric:tabular-nums;font-weight:600;line-height:1}
+  .bar{height:5px;background:rgba(255,255,255,.28);border-radius:3px;margin-top:10px}
+  .bar i{display:block;height:100%;background:#fff;border-radius:3px;transition:width .3s}
+  .btn{font-family:system-ui,sans-serif;border:0;border-radius:10px;padding:11px 14px;font-size:.95rem;font-weight:600;cursor:pointer;color:var(--ink);background:#fff}
+  .btn:focus-visible{outline:3px solid #2b6cb0;outline-offset:2px}
+  .btn:active{transform:scale(.97)}
+  .btn:disabled{opacity:.4}
+  .row .btn{background:rgba(255,255,255,.95);min-width:110px}
+  .s{background:linear-gradient(120deg,#4b4a7d,#b5729b)}
+  .o{background:linear-gradient(120deg,#2f7fb8,#5fb0d8)}
+  .i{background:linear-gradient(120deg,#b9782a,#d9a24a)}
+  .a{background:linear-gradient(120deg,#a63d3d,#d4714e)}
+  .y{background:linear-gradient(120deg,#151c3a,#33406e)}
+  .day{width:100%;background:var(--ink);color:#fff;margin:6px 0 10px;padding:15px}
+  .day.armed{background:#a63d3d}
+  .tools{display:flex;gap:8px;margin-bottom:8px}
+  .tools .btn,.line{flex:1;border:1px solid var(--line)}
+  .line{width:100%;margin-bottom:8px}
+  .edit input{width:84px;font-size:1.3rem;padding:4px 6px;border-radius:8px;border:0;text-align:right}
+  /* Kalender */
+  .calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .calhead b{font-size:1.05rem}
+  .calhead .btn{padding:6px 14px;border:1px solid var(--line)}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;font-family:system-ui,sans-serif}
+  .cal .wd{font-size:.72rem;color:var(--muted);text-align:center;padding-bottom:2px}
+  .cal .c{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.82rem;background:#fff;border:1px solid var(--line);font-variant-numeric:tabular-nums}
+  .cal .l1{background:#d6dbef;border-color:#d6dbef}
+  .cal .l2{background:#9ea7d4;border-color:#9ea7d4}
+  .cal .l3{background:var(--night);border-color:var(--night);color:#fff;font-weight:600}
+  .cal .today{outline:2px solid #b9782a;outline-offset:1px}
+  .cal .empty{background:none;border:0}
+  .legend{display:flex;gap:12px;flex-wrap:wrap;font-family:system-ui,sans-serif;font-size:.75rem;color:var(--muted);margin-top:8px}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;vertical-align:-1px;margin-right:4px;border:1px solid var(--line)}
+  /* Tabelle */
+  table{width:100%;border-collapse:collapse;font-family:system-ui,sans-serif;font-size:.88rem}
+  th{text-align:left;color:var(--muted);font-weight:500;font-size:.78rem;padding:0 0 6px}
+  td{padding:8px 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+  td.r,th.r{text-align:right}
+  td small{color:var(--muted)}
+  tr.sum td{font-weight:700;border-top:2px solid var(--ink)}
+  textarea{width:100%;height:80px;font-size:.8rem;border:1px solid var(--line);border-radius:10px;padding:8px;font-family:ui-monospace,monospace;margin-bottom:8px}
+  .note{font-family:system-ui,sans-serif;font-size:.8rem;color:var(--muted);line-height:1.45}
+  .status{font-family:system-ui,sans-serif;font-size:.85rem;color:#2f6b3a;min-height:1.2em;margin:4px 0}
+  .status.err{color:#a63d3d}
+  .toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:#fff;border-radius:12px;padding:10px 10px 10px 14px;display:flex;gap:12px;align-items:center;font-family:system-ui,sans-serif;font-size:.9rem;max-width:92vw;box-shadow:0 6px 20px rgba(29,36,51,.25)}
+  .toast button{background:#fff;color:var(--ink);padding:7px 12px}
+  .hidden{display:none!important}
+  .setup input{width:100%;font-size:1.1rem;padding:8px;border:1px solid var(--line);border-radius:8px}
+  .setup label{display:block;font-family:system-ui,sans-serif;font-size:.85rem;margin:8px 0 4px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}.btn:active{transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Kaza-Namaz</h1>
+
+  <!-- Erster Start -->
+  <section id="setup" class="setup hidden">
+    <p class="note">Füge deinen Sicherungscode ein, um deinen Stand zu laden.</p>
+    <textarea id="setupCode" placeholder="Sicherungscode hier einfügen" aria-label="Sicherungscode"></textarea>
+    <button class="btn line" id="setupLoad">Sicherung laden</button>
+    <button class="btn line" id="setupFileBtn">Sicherungsdatei öffnen</button>
+    <div class="status" id="setupStatus"></div>
+    <h2>Oder mit eigenen Zahlen starten</h2>
+    <div id="setupInputs"></div>
+    <button class="btn line" id="setupStart" style="margin-top:12px">Mit diesen Zahlen starten</button>
+  </section>
+
+  <!-- Hauptansicht -->
+  <main id="main" class="hidden">
+    <div class="banner hidden" id="banner"></div>
+    <div class="stats">
+      <div class="stat"><b id="today">0</b><span>heute</span></div>
+      <div class="stat"><b id="total">–</b><span>noch offen</span></div>
+      <div class="stat"><b id="streak">0</b><span id="streakLabel">Tage Serie</span></div>
+    </div>
+    <p class="prog" id="prog"></p>
+
+    <div id="rows"></div>
+    <button class="btn day" id="dayBtn">Ganzen Tag nachgeholt (alle 5)</button>
+    <div class="tools">
+      <button class="btn" id="undoBtn">Rückgängig</button>
+      <button class="btn" id="editBtn">Zahlen korrigieren</button>
+    </div>
+
+    <h2>Kalender</h2>
+    <div class="calhead">
+      <button class="btn" id="calPrev" aria-label="Vorheriger Monat">‹</button>
+      <b id="calTitle"></b>
+      <button class="btn" id="calNext" aria-label="Nächster Monat">›</button>
+    </div>
+    <div class="cal" id="cal"></div>
+    <div class="legend">
+      <span><i></i>nichts</span><span><i style="background:#d6dbef"></i>1–2</span>
+      <span><i style="background:#9ea7d4"></i>3 oder mehr</span><span><i style="background:#33406e"></i>alle 5 geschafft</span>
+    </div>
+
+    <h2>Monatsübersicht</h2>
+    <table>
+      <thead><tr><th>Monat</th><th class="r">Gebete</th><th class="r">≈ Tage</th></tr></thead>
+      <tbody id="months"></tbody>
+    </table>
+
+    <h2>Sicherung</h2>
+    <p class="note" id="lastBackup"></p>
+    <button class="btn line" id="shareBtn">Sicherung an WhatsApp senden</button>
+    <button class="btn line" id="fileBtn">Sicherung als Datei speichern</button>
+    <textarea id="backup" placeholder="Zum Wiederherstellen: Sicherungscode hier einfügen" aria-label="Sicherungscode"></textarea>
+    <div class="tools">
+      <button class="btn" id="importBtn">Code laden</button>
+      <button class="btn" id="importFileBtn">Datei laden</button>
+    </div>
+    <div class="status" id="status"></div>
+
+    <p class="note" style="margin-top:20px">Ein neuer Tag beginnt um 4 Uhr nachts. Kaza nach Mitternacht zählt also noch zum Vortag. Daten bleiben nur auf diesem Gerät, solange du keine Sicherung verschickst.</p>
+  </main>
+</div>
+<input type="file" id="fileInput" accept=".json,application/json,text/plain" class="hidden">
+<div class="toast hidden" id="toast" role="status"><span id="toastText"></span><button class="btn" id="toastUndo">Rückgängig</button></div>
+
+<script>
+const P=[{k:"S",n:"Sabah",c:"s"},{k:"O",n:"Öğle",c:"o"},{k:"I",n:"İkindi",c:"i"},{k:"A",n:"Akşam",c:"a"},{k:"Y",n:"Yatsı",c:"y"}];
+const PK=P.map(p=>p.k);
+const KEY="kaza-tracker-v2";
+const DAY_START_HOUR=4;
+let st=null, editing=false, calOffset=0, armedUntil=0, lastTap={k:null,t:0}, toastTimer=null, importArmed=0;
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,"0");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- Speicher ---------- */
+const store={
+  async get(){
+    if(window.storage){try{const r=await window.storage.get(KEY,false);return r?r.value:null;}catch(e){return null;}}
+    try{return localStorage.getItem(KEY);}catch(e){return null;}
+  },
+  async set(v){
+    if(window.storage){try{return !!(await window.storage.set(KEY,v,false));}catch(e){return false;}}
+    try{localStorage.setItem(KEY,v);return true;}catch(e){return false;}
+  }
+};
+async function save(){ if(!await store.set(JSON.stringify(st))) msg("Speichern fehlgeschlagen. Bitte noch einmal tippen.",true); }
+function msg(t,err,id="status"){const s=$(id);s.textContent=t;s.className="status"+(err?" err":"");}
+
+function normalize(o){
+  if(!o||typeof o!=="object"||!o.open) throw new Error("bad");
+  const open={};
+  PK.forEach(k=>{const v=Number(o.open[k]);if(!Number.isFinite(v)||v<0)throw new Error("bad");open[k]=Math.round(v);});
+  return {
+    v:3, open,
+    total: Number(o.total)||768,
+    log: Array.isArray(o.log)?o.log.filter(e=>e&&e.t&&e.ch):[],
+    hist: Array.isArray(o.hist)?o.hist:[],
+    prevBest: o.prevBest||null,
+    lastBackup: o.lastBackup||null,
+    created: o.created||new Date().toISOString()
+  };
+}
+
+/* ---------- Datum ---------- */
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const dk=d=>ymd(new Date(d.getTime()-DAY_START_HOUR*36e5));
+const parseK=k=>{const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d);};
+const addDays=(k,n)=>{const d=parseK(k);d.setDate(d.getDate()+n);return ymd(d);};
+const daysBetween=(a,b)=>Math.round((parseK(b)-parseK(a))/864e5);
+const fmtLong=d=>d.toLocaleDateString("de-DE",{day:"numeric",month:"long",year:"numeric"});
+const MONTHS=["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+const MONTHS_LONG=["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"];
+
+/* ---------- Auswertung ---------- */
+function byDay(){
+  const by={};
+  st.log.forEach(e=>{
+    if(e.label==="Korrektur") return;
+    const k=dk(new Date(e.t)); by[k]=by[k]||{S:0,O:0,I:0,A:0,Y:0};
+    Object.keys(e.ch).forEach(x=>{if(x in by[k]) by[k][x]+=e.ch[x];});
+  });
+  return by;
+}
+const sumC=c=>c?PK.reduce((a,k)=>a+c[k],0):0;
+const complete=c=>!!c&&PK.every(k=>c[k]>=1);
+function streaks(by){
+  const today=dk(new Date());
+  let k=complete(by[today])?today:addDays(today,-1), cur=0;
+  while(complete(by[k])){cur++;k=addDays(k,-1);}
+  const days=Object.keys(by).filter(x=>complete(by[x])).sort();
+  let best=0,run=0,prev=null;
+  days.forEach(d=>{run=(prev&&daysBetween(prev,d)===1)?run+1:1;best=Math.max(best,run);prev=d;});
+  return {cur,best};
+}
+
+/* ---------- Aktionen ---------- */
+function act(keys,label){
+  const ch={};
+  keys.forEach(k=>{if(st.open[k]>0){st.open[k]--;ch[k]=1;}});
+  if(!Object.keys(ch).length) return;
+  st.log.unshift({t:new Date().toISOString(),label,ch});
+  render(); save();
+  toast(label==="Ganzer Tag"?"Ganzer Tag eingetragen":label+" eingetragen");
+}
+function undo(){
+  const e=st.log.shift(); if(!e) return;
+  Object.keys(e.ch).forEach(k=>st.open[k]+=e.ch[k]);
+  render(); save(); hideToast();
+}
+function tapGuard(k){const t=Date.now();if(lastTap.k===k&&t-lastTap.t<700)return false;lastTap={k,t};return true;}
+function toast(text){
+  $("toastText").textContent=text; $("toast").classList.remove("hidden");
+  clearTimeout(toastTimer); toastTimer=setTimeout(hideToast,5000);
+}
+function hideToast(){$("toast").classList.add("hidden");}
+
+/* ---------- Anzeige ---------- */
+function render(){
+  const by=byDay(), today=dk(new Date());
+  // Zeilen
+  const rows=$("rows"); rows.innerHTML=""; let sum=0;
+  P.forEach(p=>{
+    const open=st.open[p.k]; sum+=open;
+    const pct=Math.max(0,Math.min(100,Math.round((st.total-open)/st.total*100)));
+    const d=document.createElement("div"); d.className="row "+p.c;
+    d.innerHTML=`<div class="top"><div><div class="name">${p.n}</div><div class="done">${Math.max(0,st.total-open)} von ${st.total} erledigt</div></div>
+      ${editing?`<div class="edit"><input type="number" inputmode="numeric" min="0" value="${open}" aria-label="${p.n} offen" data-k="${p.k}"></div>`:`<div class="count">${open}</div>`}</div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      ${editing?"":`<div style="margin-top:10px;text-align:right"><button class="btn" data-k="${p.k}">Nachgeholt</button></div>`}`;
+    rows.appendChild(d);
+  });
+  rows.querySelectorAll("button[data-k]").forEach(b=>b.onclick=()=>{
+    if(!tapGuard(b.dataset.k)) return;
+    const p=P.find(x=>x.k===b.dataset.k); act([p.k],p.n);
+  });
+  $("total").textContent=sum.toLocaleString("de-DE");
+  const todayN=sumC(by[today]); $("today").textContent=todayN;
+
+  // Serie
+  const s=streaks(by);
+  $("streak").textContent=s.cur;
+  let rec=`Tage Serie · Rekord ${s.best}`;
+  if(st.prevBest&&st.prevBest.days>s.best) rec=`Tage Serie · Rekord vorher ca. ${st.prevBest.days}`;
+  $("streakLabel").textContent=rec;
+
+  // Prognose
+  const maxOpen=Math.max(...PK.map(k=>st.open[k]));
+  let prog="";
+  if(maxOpen===0){prog="<strong>Alles nachgeholt. Elhamdülillah.</strong>";}
+  else{
+    const base=parseK(today); base.setDate(base.getDate()+maxOpen);
+    prog=`Mit 1 Kaza-Tag pro Tag fertig am <strong>${fmtLong(base)}</strong>.`;
+    const keys=Object.keys(by).sort();
+    if(keys.length){
+      const span=Math.min(30,daysBetween(keys[0],today)+1);
+      if(span>=3){
+        const from=addDays(today,-(span-1)), tot={S:0,O:0,I:0,A:0,Y:0};
+        keys.filter(k=>k>=from&&k<=today).forEach(k=>PK.forEach(x=>tot[x]+=by[k][x]));
+        const avg=PK.reduce((a,k)=>a+tot[k],0)/span;
+        let need=0, ok=true;
+        PK.forEach(k=>{if(st.open[k]>0){const r=tot[k]/span;if(r===0)ok=false;else need=Math.max(need,Math.ceil(st.open[k]/r));}});
+        if(ok&&avg>0){const f=parseK(today);f.setDate(f.getDate()+need);
+          prog+=`<br>In deinem Tempo der letzten ${span} Tage (Ø ${avg.toLocaleString("de-DE",{maximumFractionDigits:1})} Gebete pro Tag) fertig am <strong>${fmtLong(f)}</strong>.`;}
+        else if(avg>0){prog+=`<br>Ein Gebet hast du in den letzten ${span} Tagen nicht nachgeholt, deshalb gibt es noch keine Tempo-Prognose.`;}
+      }
+    }
+  }
+  $("prog").innerHTML=prog;
+
+  // Knöpfe
+  $("undoBtn").disabled=!st.log.length||editing;
+  const db=$("dayBtn"); db.style.display=editing?"none":"";
+  const armed=Date.now()<armedUntil;
+  db.classList.toggle("armed",armed);
+  db.textContent=armed?`Heute schon ${todayN} eingetragen. Nochmal tippen zum Bestätigen`:"Ganzen Tag nachgeholt (alle 5)";
+  $("editBtn").textContent=editing?"Korrektur speichern":"Zahlen korrigieren";
+
+  renderCal(by,today); renderMonths(by); renderBackup();
+}
+
+function renderCal(by,today){
+  const t=parseK(today), first=new Date(t.getFullYear(),t.getMonth()+calOffset,1);
+  $("calTitle").textContent=MONTHS_LONG[first.getMonth()]+" "+first.getFullYear();
+  $("calNext").disabled=calOffset>=0;
+  const days=new Date(first.getFullYear(),first.getMonth()+1,0).getDate();
+  const lead=(first.getDay()+6)%7;
+  let h=["Mo","Di","Mi","Do","Fr","Sa","So"].map(d=>`<div class="wd">${d}</div>`).join("");
+  for(let i=0;i<lead;i++) h+=`<div class="c empty"></div>`;
+  for(let d=1;d<=days;d++){
+    const k=ymd(new Date(first.getFullYear(),first.getMonth(),d)), c=by[k], n=sumC(c);
+    const lvl=complete(c)?"l3":n>=3?"l2":n>=1?"l1":"";
+    h+=`<div class="c ${lvl} ${k===today?"today":""}" title="${n} Gebete">${d}</div>`;
+  }
+  $("cal").innerHTML=h;
+}
+
+function renderMonths(by){
+  const m={};
+  Object.keys(by).forEach(k=>{const mk=k.slice(0,7);m[mk]=(m[mk]||0)+sumC(by[k]);});
+  const rows=Object.keys(m).sort().reverse().map(mk=>{
+    const [y,mo]=mk.split("-");
+    return {label:MONTHS[+mo-1]+" "+y,made:m[mk],src:""};
+  });
+  [...st.hist].reverse().forEach(h=>rows.push({label:h.label,made:h.made,src:"WhatsApp"}));
+  let total=0;
+  const html=rows.map(r=>{total+=r.made;
+    return `<tr><td>${esc(r.label)}${r.src?` <small>(${r.src})</small>`:""}</td><td class="r">${r.made}</td><td class="r">${(r.made/5).toLocaleString("de-DE",{maximumFractionDigits:1})}</td></tr>`;}).join("");
+  $("months").innerHTML=(html||`<tr><td colspan="3"><small>Noch keine Einträge.</small></td></tr>`)+
+    (rows.length?`<tr class="sum"><td>Gesamt</td><td class="r">${total}</td><td class="r">${(total/5).toLocaleString("de-DE",{maximumFractionDigits:1})}</td></tr>`:"");
+}
+
+function renderBackup(){
+  const last=st.lastBackup?new Date(st.lastBackup):null;
+  const ref=last||new Date(st.created);
+  const age=Math.floor((Date.now()-ref.getTime())/864e5);
+  $("lastBackup").textContent=last?`Letzte Sicherung: ${fmtLong(last)} (vor ${age} ${age===1?"Tag":"Tagen"}).`:"Noch keine Sicherung gemacht.";
+  const due=last?age>=30:age>=3;
+  const b=$("banner");
+  if(due&&!editing){
+    b.innerHTML=`${last?`Deine letzte Sicherung ist ${age} Tage her.`:"Du hast noch keine Sicherung gemacht."} Schick dir kurz den Code in WhatsApp.<br><button class="btn line" id="bannerShare">Jetzt sichern</button>`;
+    b.classList.remove("hidden"); $("bannerShare").onclick=shareCode;
+  } else b.classList.add("hidden");
+}
+
+/* ---------- Sicherung ---------- */
+const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+const dec=s=>JSON.parse(decodeURIComponent(escape(atob(s))));
+function parseBackup(text){
+  text=(text||"").trim();
+  if(text.startsWith("{")) return normalize(JSON.parse(text));
+  const m=text.match(/[A-Za-z0-9+/]{20,}={0,2}/g);
+  if(!m) throw new Error("bad");
+  return normalize(dec(m.sort((a,b)=>b.length-a.length)[0]));
+}
+async function markBackup(){st.lastBackup=new Date().toISOString();await save();render();}
+async function shareCode(){
+  const code=enc(st);
+  const text=`Kaza-Sicherung vom ${fmtLong(new Date())}\nOffen: ${PK.map(k=>P.find(p=>p.k===k).n+" "+st.open[k]).join(", ")}\n${code}`;
+  if(navigator.share){
+    try{await navigator.share({text});await markBackup();msg("Sicherung verschickt.");return;}
+    catch(e){if(e&&e.name==="AbortError")return;}
+  }
+  try{await navigator.clipboard.writeText(text);await markBackup();msg("Sicherung kopiert. Jetzt in WhatsApp einfügen.");}
+  catch(e){$("backup").value=text;$("backup").select();msg("Code steht im Feld unten. Markieren, kopieren und in WhatsApp einfügen.",true);}
+}
+async function saveFile(){
+  const name=`kaza-sicherung-${ymd(new Date())}.json`;
+  const data=JSON.stringify(st);
+  try{
+    const file=new File([data],name,{type:"application/json"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]}); await markBackup(); msg("Datei gesichert. Am besten „In Dateien sichern“ → iCloud Drive."); return;
+    }
+  }catch(e){if(e&&e.name==="AbortError")return;}
+  try{
+    const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([data],{type:"application/json"}));a.download=name;
+    document.body.appendChild(a);a.click();a.remove();await markBackup();msg("Datei gespeichert.");
+  }catch(e){msg("Datei konnte nicht gespeichert werden. Nutze „An WhatsApp senden“.",true);}
+}
+async function applyImport(obj,statusId){
+  st=obj; editing=false; await save();
+  $("setup").classList.add("hidden"); $("main").classList.remove("hidden");
+  render(); msg("Sicherung geladen.",false,statusId==="setupStatus"?"status":statusId);
+}
+let fileTarget="status";
+$("fileInput").onchange=async e=>{
+  const f=e.target.files[0]; e.target.value=""; if(!f) return;
+  try{await applyImport(parseBackup(await f.text()),fileTarget);}
+  catch(err){msg("Die Datei ist keine gültige Kaza-Sicherung.",true,fileTarget);}
+};
+
+/* ---------- Ereignisse ---------- */
+$("dayBtn").onclick=()=>{
+  if(!tapGuard("day")) return;
+  const todayN=sumC(byDay()[dk(new Date())]);
+  if(todayN>=5&&Date.now()>=armedUntil){armedUntil=Date.now()+4000;render();setTimeout(render,4100);return;}
+  armedUntil=0; act(PK,"Ganzer Tag");
+};
+$("undoBtn").onclick=undo;
+$("toastUndo").onclick=undo;
+$("editBtn").onclick=()=>{
+  if(editing){
+    const ch={};let changed=false;
+    document.querySelectorAll(".edit input").forEach(inp=>{
+      const v=Math.max(0,parseInt(inp.value,10)||0),k=inp.dataset.k;
+      if(v!==st.open[k]){ch[k]=st.open[k]-v;st.open[k]=v;changed=true;}
+    });
+    if(changed) st.log.unshift({t:new Date().toISOString(),label:"Korrektur",ch});
+    editing=false;render();if(changed)save();
+  } else {editing=true;render();}
+};
+$("calPrev").onclick=()=>{calOffset--;render();};
+$("calNext").onclick=()=>{if(calOffset<0){calOffset++;render();}};
+$("shareBtn").onclick=shareCode;
+$("fileBtn").onclick=saveFile;
+$("importBtn").onclick=async()=>{
+  let obj; try{obj=parseBackup($("backup").value);}catch(e){msg("Der Code ist ungültig. Bitte den kompletten Sicherungscode einfügen.",true);return;}
+  if(Date.now()>importArmed){importArmed=Date.now()+5000;msg("Das ersetzt deinen aktuellen Stand. Tippe zum Bestätigen noch einmal auf „Code laden“.",true);return;}
+  importArmed=0; await applyImport(obj,"status"); $("backup").value="";
+};
+$("importFileBtn").onclick=()=>{fileTarget="status";$("fileInput").click();};
+
+/* ---------- Erster Start ---------- */
+function showSetup(){
+  $("setupInputs").innerHTML=P.map(p=>`<label for="in${p.k}">${p.n} offen</label><input id="in${p.k}" type="number" inputmode="numeric" min="0" value="0">`).join("")+
+    `<label for="inT">Schuld pro Gebet gesamt</label><input id="inT" type="number" inputmode="numeric" min="1" value="768">`;
+  $("setup").classList.remove("hidden");
+}
+$("setupLoad").onclick=async()=>{
+  try{await applyImport(parseBackup($("setupCode").value),"setupStatus");}
+  catch(e){msg("Der Code ist ungültig. Bitte den kompletten Sicherungscode einfügen.",true,"setupStatus");}
+};
+$("setupFileBtn").onclick=()=>{fileTarget="setupStatus";$("fileInput").click();};
+$("setupStart").onclick=async()=>{
+  const open={};PK.forEach(k=>open[k]=Math.max(0,parseInt($("in"+k).value,10)||0));
+  const total=Math.max(1,parseInt($("inT").value,10)||768);
+  await applyImport(normalize({open,total,log:[],hist:[]}),"setupStatus");
+};
+
+/* ---------- Start ---------- */
+(async()=>{
+  const v=await store.get();
+  if(v){try{st=normalize(JSON.parse(v));}catch(e){st=null;}}
+  if(st){$("main").classList.remove("hidden");render();save();}
+  else showSetup();
+  if(navigator.storage&&navigator.storage.persist){try{navigator.storage.persist();}catch(e){}}
+  if("serviceWorker" in navigator&&location.protocol==="https:"){navigator.serviceWorker.register("sw.js").catch(()=>{});}
+  setInterval(()=>{if(st&&!editing)render();},60000);
+})();
+</script>
+</body>
+</html>
